@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+   
+   <link rel="stylesheet" href="../css/uall.css">
+	<link rel="stylesheet" href="../css/zhibo.css">
+   <script type="text/javascript" src="../js/base.js"></script>
+</head>
+<body>
+
+ <br>
+
+
+
+
+<div class="Personal_list">
+		<a onClick="openWin('back_pwd')">
+			<img src="../user/14.png" alt="">
+			<h3>修改密码</h3>
+		</a>
+		
+		<a onClick="openWin('guankan_help_win')">
+			<img src="../user/17.png" alt="">
+			<h3>常见问题</h3>
+		</a>
+		
+		<a onClick="cleaCache()">
+			<img src="../user/19.png" alt="">
+			<h3>清理缓存</h3>
+			<p id="cache"></p>
+		</a>
+		
+		<a onClick="checkUpdate()">
+			<img src="../user/20.png" alt="">
+			<h3>在线更新</h3>
+			<p id="vsion"></p>
+		</a>
+		
+		
+		
+	</div>
+	</body>
+	
+<script type="text/javascript" src="../script/api.js"></script>
+	<script type="text/javascript">
+		
+////////////清楚缓存 方法  cleaCache   S   ////////////
+
+		function cleaCache() {
+			api.clearCache(function() {
+				api.toast({
+					msg: '清除完成'
+				});
+				getCache();
+			});
+		}
+		////////////清楚缓存 方法  cleaCache   E   ////////////
+
+////////////计算缓存 方法  getCache   S   ////////////
+		function getCache() {
+			api.getCacheSize(function(ret) {
+				var size = ret.size / 1024 / 1024;
+				var mb = size.toFixed(2)
+				var cache = $api.byId('cache');
+				cache.innerHTML = mb + 'MB';
+
+			});
+		}
+		////////////计算缓存 方法  getCache   E   ////////////
+		
+/////////////更新app 方法  checkUpdate   E  （在apicloud进行）  ////////////
+		function checkUpdate() {
+			var mam = api.require('mam');
+			mam.checkUpdate(function(ret, err) {
+				if(ret) {
+					var result = ret.result;
+					if(result.update == true && result.closed == false) {
+						//  var str = '新版本号:' + result.version + '\n更新内容:' + result.updateTip  //下载地址:' + ';发布时间:' + result.time; + result.source + '; 需要的可以加上去
+						var str = '发布时间:' + result.time + '\n更新内容:\n' + result.updateTip //下载地址:' + ';发布时间:' + result.time; + result.source + '; 需要的可以加上去
+						api.confirm({
+							title: '已有新版本 V' + result.version,
+							msg: str,
+							buttons: ['更新', '取消']
+						}, function(ret, err) {
+							if(ret.buttonIndex == 1) {
+								if(api.systemType == "android") {
+									api.download({
+										url: result.source,
+										report: true
+									}, function(ret, err) {
+										if(ret && 0 == ret.state) { /* 下载进度 */
+											api.toast({
+												msg: "正在更新应用" + ret.percent + "%",
+												duration: 2000
+											});
+										}
+										if(ret && 1 == ret.state) { /* 下载完成 */
+											var savePath = ret.savePath;
+											api.installApp({
+												appUri: savePath
+											});
+										}
+									});
+								}
+								if(api.systemType == "ios") {
+									api.installApp({
+										appUri: result.source
+									});
+								}
+							}
+						});
+					} else {
+						/*
+						  api.alert({
+						      msg : "已是最新版，无需更新！"
+						  });
+						  */
+						api.toast({
+							msg: "已是最新版，无需更新！",
+							duration: 5000
+						});
+					}
+				} else {
+					api.alert({
+						msg: err.msg
+					});
+				}
+			});
+		}
+
+		/////////////更新app 方法  checkUpdate   E   ////////////
+		
+</script>
+
+</html>
